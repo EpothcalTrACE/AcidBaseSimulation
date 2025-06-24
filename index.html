@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acid-Base Simulation</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Interactive Acid-Base Simulation</h1>
+
+  <section class="controls">
+    <label for="substance">Select Substance:
+      <select id="substance">
+        <option value="HCl">HCl (Strong Acid)</option>
+        <option value="NaOH">NaOH (Strong Base)</option>
+        <option value="CH3COOH" selected>CH₃COOH (Weak Acid)</option>
+      </select>
+    </label>
+
+    <label for="concentration">Concentration (M):
+      <input type="range" id="concentration" min="0.01" max="1.0" step="0.01" value="0.1">
+      <span id="concVal">0.10</span>
+    </label>
+
+    <label for="volumeInput">Acid Volume (L):
+      <input id="volumeInput" type="number" step="0.01" value="0.05">
+    </label>
+
+    <label for="baseInput">Base Concentration (M):
+      <input id="baseInput" type="number" step="0.01" value="0.1">
+    </label>
+
+    <div class="button-group">
+      <button id="resetButton">Reset</button>
+      <button id="exportButton">Export Chart</button>
+      <button id="simulateButton">Step-by-Step Simulation</button>
+      <button id="playPauseButton">Play</button>
+    </div>
+  </section>
+
+  <section class="output">
+    <div id="indicatorBox">pH Indicator</div>
+    <p>Current pH: <span id="pH">7.00</span></p>
+    <p id="livePHDisplay">pH: 0.00</p>
+
+    <label for="titrationSlider">Titration Progress:
+      <input id="titrationSlider" type="range" min="0" max="60" value="60">
+      <span id="sliderLabel">60 mL</span>
+    </label>
+
+    <canvas id="titrationChart" width="600" height="400"></canvas>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
