@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     options: {
       scales: {
         x: {
-          title: { display: true, text: "Volume of Base Added (mL)" }
+          title: { display: true, text: "Volume Added (mL)" }
         },
         y: {
           min: 0,
@@ -41,15 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
     indicatorBox.textContent = `pH: ${pH.toFixed(2)}`;
   }
 
-  function calculatePH(conc, type) {
-    if (type === "acid") {
-      return -Math.log10(conc);
-    } else if (type === "base") {
-      return 14 + Math.log10(conc);
-    }
-    return 7;
-  }
-
   function generateCurve() {
     const substance = substanceSelect.value;
     const conc = parseFloat(concentrationInput.value);
@@ -57,8 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseConc = parseFloat(baseInput.value);
 
     const Ka = 1.8e-5;
-    const n_acid = conc * acidVol;
-
     const labels = [];
     const data = [];
 
@@ -68,12 +57,15 @@ document.addEventListener("DOMContentLoaded", () => {
       let pH = 7;
 
       if (substance === "CH3COOH") {
+        const n_acid = conc * acidVol;
         if (n_base < n_acid) {
           const HA = n_acid - n_base;
           const A = n_base;
-          pH = Math.log10(A / HA);
-          pH = -Math.log10(Math.sqrt(Ka * conc));
-          if (A > 0 && HA > 0) pH = -Math.log10(Ka) + Math.log10(A / HA);
+          if (A > 0 && HA > 0) {
+            pH = -Math.log10(Ka) + Math.log10(A / HA);
+          } else {
+            pH = -Math.log10(Math.sqrt(Ka * conc));
+          }
         } else if (Math.abs(n_base - n_acid) < 1e-6) {
           const A = n_acid / (acidVol + v_base);
           const Kb = 1e-14 / Ka;
@@ -83,12 +75,32 @@ document.addEventListener("DOMContentLoaded", () => {
           const excessOH = (n_base - n_acid) / (acidVol + v_base);
           pH = 14 + Math.log10(excessOH);
         }
+
       } else if (substance === "HCl") {
-        const excessH = Math.max(1e-7, (n_acid - n_base) / (acidVol + v_base));
-        pH = -Math.log10(excessH);
+        const n_acid = conc * acidVol;
+        if (n_base < n_acid) {
+          const H_conc = (n_acid - n_base) / (acidVol + v_base);
+          pH = -Math.log10(H_conc);
+        } else if (Math.abs(n_base - n_acid) < 1e-6) {
+          pH = 7;
+        } else {
+          const OH_conc = (n_base - n_acid) / (acidVol + v_base);
+          pH = 14 + Math.log10(OH_conc);
+        }
+
       } else if (substance === "NaOH") {
-        const OH = baseConc;
-        pH = 14 + Math.log10(OH);
+        const n_base_total = baseConc * acidVol;
+        const n_acid_added = conc * v_base;
+
+        if (n_acid_added < n_base_total) {
+          const OH_conc = (n_base_total - n_acid_added) / (acidVol + v_base);
+          pH = 14 + Math.log10(OH_conc);
+        } else if (Math.abs(n_acid_added - n_base_total) < 1e-6) {
+          pH = 7;
+        } else {
+          const H_conc = (n_acid_added - n_base_total) / (acidVol + v_base);
+          pH = -Math.log10(H_conc);
+        }
       }
 
       labels.push(mL);
