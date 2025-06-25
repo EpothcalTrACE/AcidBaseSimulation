@@ -1,51 +1,5 @@
-
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  background-color: #f4f4f4;
-}
-h1 {
-  text-align: center;
-}
-.controls, .output {
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  margin: 20px auto;
-  max-width: 800px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-label {
-  display: block;
-  margin: 10px 0;
-}
-input, select {
-  width: 100%;
-  padding: 5px;
-}
-.button-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 15px;
-}
-.button-group button {
-  padding: 8px 14px;
-  font-size: 14px;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 5px;
-  cursor: pointer;
-}
-.button-group button:hover {
-  background-color: #0056b3;
-}
-#indicatorBox {
-  padding: 10px;
-  text-align: center;
-  font-weight: bold;
-  color: #fff;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
+body { font-family: Arial, sans-serif; margin: 2rem; }
+canvas { max-width: 100%; height: auto; }
+.controls label, .controls input, .controls select { display: block; margin: 0.5rem 0; }
+.button-group button { margin: 0.5rem 0.5rem 0.5rem 0; }
+#indicatorBox { padding: 0.5rem; border-radius: 5px; width: 150px; margin-top: 1rem; text-align: center; }

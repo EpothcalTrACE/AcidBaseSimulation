@@ -1,169 +1,141 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ✅ Correct registration syntax for UMD build
   window.Chart.register(window.ChartAnnotation);
+
   const ctx = document.getElementById("titrationChart").getContext("2d");
-  const substanceSelect = document.getElementById("substance");
-  const concentrationInput = document.getElementById("concentration");
-  const concVal = document.getElementById("concVal");
-  const volumeInput = document.getElementById("volumeInput");
-  const baseInput = document.getElementById("baseInput");
-  const titrationSlider = document.getElementById("titrationSlider");
-  const sliderLabel = document.getElementById("sliderLabel");
-  const pHDisplay = document.getElementById("pH");
+  const slider = document.getElementById("titrationSlider");
+  const label = document.getElementById("sliderLabel");
   const indicatorBox = document.getElementById("indicatorBox");
 
-  const resetButton = document.getElementById("resetButton");
-  const exportButton = document.getElementById("exportButton");
-  const simulateButton = document.getElementById("simulateButton");
-  const playPauseButton = document.getElementById("playPauseButton");
-
-  const ctx = document.getElementById("titrationChart").getContext("2d");
-  const chart = new Chart(ctx, {
-    type: "line",
+  let chart = new Chart(ctx, {
+    type: 'line',
     data: {
-      labels: [],
+      labels: Array.from({length: 61}, (_, i) => i),
       datasets: [{
-        label: "Titration Curve",
+        label: "pH vs Volume",
         borderColor: "blue",
-        data: [],
-        fill: false
+        fill: false,
+        data: Array(61).fill(null)
       }]
     },
     options: {
-      animation: false,
+      scales: {
+        x: { title: { display: true, text: "Volume (mL)" } },
+        y: { title: { display: true, text: "pH" }, min: 0, max: 14 }
+      },
       plugins: {
         annotation: {
           annotations: {
             stepLine: {
               type: 'line',
-              xMin: 0, xMax: 0,
+              xMin: 0,
+              xMax: 0,
               borderColor: 'red',
               borderWidth: 2,
             }
           }
         }
-      },
-      scales: {
-        x: {
-          title: { display: true, text: "Volume Added (mL)" },
-          min: 0,
-          max: 60
-        },
-        y: {
-          min: 0,
-          max: 14,
-          title: { display: true, text: "pH" }
-        }
       }
     }
   });
 
-  function updatePHDisplay(pH) {
-    pHDisplay.textContent = pH.toFixed(2);
-    indicatorBox.textContent = `pH: ${pH.toFixed(2)}`;
-    indicatorBox.style.backgroundColor =
-      pH < 7 ? "#ff6666" : pH > 7 ? "#66cc66" : "#66ccff";
-  }
-
-  function generateCurve() {
-    const substance = substanceSelect.value;
-    const conc = parseFloat(concentrationInput.value);
-    const acidVol = parseFloat(volumeInput.value);
-    const baseConc = parseFloat(baseInput.value);
+  function calculateData() {
+    const acidType = document.getElementById("substance").value;
+    const conc = parseFloat(document.getElementById("concentration").value);
+    const vol = parseFloat(document.getElementById("volumeInput").value);
+    const baseConc = parseFloat(document.getElementById("baseInput").value);
     const Ka = 1.8e-5;
 
-    const labels = [], data = [];
-    for (let mL = 0; mL <= 60; mL++) {
-      let v = mL / 1000, n_base = baseConc * v, pH = 7;
+    return Array.from({length: 61}, (_, mL) => {
+      const Vb = mL / 1000;
+      let pH = 7;
 
-      if (substance === "HCl") {
-        const n_acid = conc * acidVol;
-        if (n_base < n_acid) pH = -Math.log10((n_acid - n_base) / (acidVol + v));
-        else if (Math.abs(n_base - n_acid) < 1e-6) pH = 7;
-        else pH = 14 + Math.log10((n_base - n_acid) / (acidVol + v));
+      if (acidType === "HCl") {
+        const nA = conc * vol;
+        const nB = baseConc * Vb;
+        if (nB < nA) pH = -Math.log10((nA - nB) / (vol + Vb));
+        else if (Math.abs(nB - nA) < 1e-6) pH = 7;
+        else pH = 14 + Math.log10((nB - nA) / (vol + Vb));
+      } else if (acidType === "NaOH") {
+        const nB = conc * vol;
+        const nA = baseConc * Vb;
+        if (nA < nB) pH = 14 + Math.log10((nB - nA) / (vol + Vb));
+        else if (Math.abs(nA - nB) < 1e-6) pH = 7;
+        else pH = -Math.log10((nA - nB) / (vol + Vb));
+      } else if (acidType === "CH3COOH") {
+        const nHA = conc * vol;
+        const nB = baseConc * Vb;
+        if (nB < nHA) {
+          const ratio = nB / (nHA - nB);
+          pH = -Math.log10(Ka) + Math.log10(ratio);
+        } else if (Math.abs(nB - nHA) < 1e-6) {
+          pH = 7;
+        } else {
+          const excessOH = (nB - nHA) / (vol + Vb);
+          pH = 14 + Math.log10(excessOH);
+        }
       }
-      else if (substance === "NaOH") {
-        const n_base_initial = baseConc * acidVol;
-        const n_acid_added = conc * v;
-        if (n_acid_added < n_base_initial) pH = 14 + Math.log10((n_base_initial - n_acid_added) / (acidVol + v));
-        else if (Math.abs(n_acid_added - n_base_initial) < 1e-6) pH = 7;
-        else pH = -Math.log10((n_acid_added - n_base_initial) / (acidVol + v));
-      }
-      else if (substance === "CH3COOH") {
-        const n_acid = conc * acidVol;
-        if (n_base < n_acid) pH = -Math.log10(Ka) + Math.log10(n_base / (n_acid - n_base));
-        else if (Math.abs(n_base - n_acid) < 1e-6) pH = 7 + Math.log10(Math.sqrt((1e-14 / Ka) * (n_acid / (acidVol + v))));
-        else pH = 14 + Math.log10((n_base - n_acid) / (acidVol + v));
-      }
-
-      labels.push(mL);
-      data.push(Math.max(0, Math.min(14, pH)));
-    }
-
-    chart.data.labels = labels;
-    chart.data.datasets[0].data = data;
-    updateStepLine(parseInt(titrationSlider.value));
-    chart.update();
-    updatePHDisplay(data[titrationSlider.value]);
+      return Math.min(14, Math.max(0, pH));
+    });
   }
 
-  function updateStepLine(step) {
+  function updateChart() {
+    const data = calculateData();
+    chart.data.datasets[0].data = data;
+    const step = parseInt(slider.value);
     chart.options.plugins.annotation.annotations.stepLine.xMin = step;
     chart.options.plugins.annotation.annotations.stepLine.xMax = step;
+    chart.update();
+    label.textContent = `${step} mL`;
+    indicatorBox.textContent = `pH: ${data[step].toFixed(2)}`;
+    indicatorBox.style.backgroundColor = data[step] < 7 ? '#f88' : data[step] > 7 ? '#8f8' : '#8cf';
   }
 
-  concentrationInput.addEventListener("input", () => {
-    concVal.textContent = parseFloat(concentrationInput.value).toFixed(2);
-    generateCurve();
-  });
-  [substanceSelect, volumeInput, baseInput].forEach(el => el.addEventListener("input", generateCurve));
+  slider.addEventListener("input", updateChart);
+  ["substance", "concentration", "volumeInput", "baseInput"].forEach(id =>
+    document.getElementById(id).addEventListener("input", updateChart)
+  );
 
-  titrationSlider.addEventListener("input", (e) => {
-    const s = parseInt(e.target.value);
-    sliderLabel.textContent = `${s} mL`;
-    updateStepLine(s);
-    chart.update();
-    const d = chart.data.datasets[0].data[s];
-    updatePHDisplay(d);
+  document.getElementById("resetButton").addEventListener("click", () => {
+    slider.value = 0;
+    updateChart();
   });
 
-  let sim = 0, playing = false, timer = null;
+  let simStep = 0;
+  let timer = null;
 
-  resetButton.addEventListener("click", () => {
-    sim = 0; playing = false;
-    titrationSlider.value = 0;
-    sliderLabel.textContent = "0 mL";
-    playPauseButton.textContent = "Play";
-    generateCurve();
+  document.getElementById("simulateButton").addEventListener("click", () => {
+    if (simStep <= 60) {
+      slider.value = simStep;
+      updateChart();
+      simStep++;
+    } else {
+      simStep = 0;
+    }
   });
 
-  simulateButton.addEventListener("click", () => {
-    if (sim <= 60) {
-      titrationSlider.value = sim;
-      sliderLabel.textContent = `${sim} mL`;
-      updateStepLine(sim);
-      chart.update();
-      updatePHDisplay(chart.data.datasets[0].data[sim]);
-      sim++;
-    } else sim = 0;
+  document.getElementById("playPauseButton").addEventListener("click", () => {
+    const btn = document.getElementById("playPauseButton");
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+      btn.textContent = "Play";
+    } else {
+      timer = setInterval(() => {
+        if (simStep <= 60) {
+          slider.value = simStep;
+          updateChart();
+          simStep++;
+        } else {
+          clearInterval(timer);
+          timer = null;
+          btn.textContent = "Play";
+        }
+      }, 300);
+      btn.textContent = "Pause";
+    }
   });
 
-  playPauseButton.addEventListener("click", () => {
-    playing = !playing;
-    playPauseButton.textContent = playing ? "Pause" : "Play";
-    if (playing) {
-      timer = setInterval(() => simulateButton.click(), 300);
-    } else clearInterval(timer);
-  });
-
-  exportButton.addEventListener("click", () => {
-    const link = document.createElement("a");
-    link.href = chart.toBase64Image();
-    link.download = "titration-curve.png";
-    link.click();
-  });
-
-  generateCurve(); // Initial draw
+  updateChart();
 });
 
 
