@@ -12,6 +12,10 @@ let liveIndex = 0;
 let interval = null;
 let full_pH_values = [], full_baseVols = [];
 
+concentrationInput.addEventListener("input", () => {
+  concVal.textContent = concentrationInput.value;
+});
+
 simulateBtn.addEventListener("click", () => {
   stopLive();
   const substance = substanceSelect.value;
