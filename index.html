@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Acid-Base Simulation</title>
   <link rel="stylesheet" href="styles.css" />
-  
-  <!-- Load Chart.js and the Annotation plugin -->
+
+  <!-- ✅ Chart.js + Annotation Plugin -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0/dist/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
   <h1>Interactive Acid-Base Simulation</h1>
@@ -43,8 +43,8 @@
     </div>
 
     <label for="titrationSlider">Titration Progress:
-      <input id="titrationSlider" type="range" min="0" max="60" value="60">
-      <span id="sliderLabel">60 mL</span>
+      <input id="titrationSlider" type="range" min="0" max="60" value="0">
+      <span id="sliderLabel">0 mL</span>
     </label>
   </section>
 
@@ -54,7 +54,6 @@
     <canvas id="titrationChart" width="600" height="400"></canvas>
   </section>
 
-  <!-- Link to external behavior -->
   <script src="script.js"></script>
 </body>
 </html>
