@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  Chart.register(window['chartjs-plugin-annotation']);
   const substanceSelect = document.getElementById("substance");
   const concentrationInput = document.getElementById("concentration");
   const concVal = document.getElementById("concVal");
