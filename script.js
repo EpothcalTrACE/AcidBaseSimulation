@@ -31,6 +31,8 @@ liveBtn.addEventListener("click", () => {
   concVal.textContent = conc.toFixed(2);
   generateTitrationData(substance, conc, vol, baseConc);
   runLiveTitration();
+  liveBtn.addEventListener("click", () => {
+  console.log("Live Titration button clicked"); // 👈 Debug line
 });
 
 function generateTitrationData(substance, acidConc, acidVol, baseConc) {
