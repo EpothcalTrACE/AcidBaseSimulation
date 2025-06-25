@@ -5,22 +5,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const slider = document.getElementById("titrationSlider");
   const label = document.getElementById("sliderLabel");
   const indicatorBox = document.getElementById("indicatorBox");
+  const pHSpan = document.getElementById("pH");
+  const livePHDisplay = document.getElementById("livePHDisplay");
+  const concVal = document.getElementById("concVal");
 
-  let chart = new Chart(ctx, {
+  const chart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: Array.from({length: 61}, (_, i) => i),
+      labels: Array.from({ length: 61 }, (_, i) => i),
       datasets: [{
-        label: "pH vs Volume",
+        label: "pH vs Volume (mL)",
         borderColor: "blue",
-        fill: false,
-        data: Array(61).fill(null)
+        data: Array(61).fill(null),
+        tension: 0.3,
+        fill: false
       }]
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
       scales: {
         x: { title: { display: true, text: "Volume (mL)" } },
-        y: { title: { display: true, text: "pH" }, min: 0, max: 14 }
+        y: { min: 0, max: 14, title: { display: true, text: "pH" } }
       },
       plugins: {
         annotation: {
@@ -30,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
               xMin: 0,
               xMax: 0,
               borderColor: 'red',
-              borderWidth: 2,
+              borderWidth: 2
             }
           }
         }
@@ -45,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const baseConc = parseFloat(document.getElementById("baseInput").value);
     const Ka = 1.8e-5;
 
-    return Array.from({length: 61}, (_, mL) => {
+    return Array.from({ length: 61 }, (_, mL) => {
       const Vb = mL / 1000;
       let pH = 7;
 
@@ -86,18 +92,30 @@ document.addEventListener("DOMContentLoaded", () => {
     chart.options.plugins.annotation.annotations.stepLine.xMax = step;
     chart.update();
     label.textContent = `${step} mL`;
-    indicatorBox.textContent = `pH: ${data[step].toFixed(2)}`;
+    pHSpan.textContent = data[step].toFixed(2);
+    livePHDisplay.textContent = `pH: ${data[step].toFixed(2)}`;
     indicatorBox.style.backgroundColor = data[step] < 7 ? '#f88' : data[step] > 7 ? '#8f8' : '#8cf';
   }
 
   slider.addEventListener("input", updateChart);
-  ["substance", "concentration", "volumeInput", "baseInput"].forEach(id =>
-    document.getElementById(id).addEventListener("input", updateChart)
-  );
+  document.getElementById("substance").addEventListener("change", updateChart);
+  document.getElementById("concentration").addEventListener("input", () => {
+    concVal.textContent = parseFloat(document.getElementById("concentration").value).toFixed(2);
+    updateChart();
+  });
+  document.getElementById("volumeInput").addEventListener("input", updateChart);
+  document.getElementById("baseInput").addEventListener("input", updateChart);
 
   document.getElementById("resetButton").addEventListener("click", () => {
     slider.value = 0;
     updateChart();
+  });
+
+  document.getElementById("exportButton").addEventListener("click", () => {
+    const link = document.createElement("a");
+    link.download = "titration_chart.png";
+    link.href = chart.toBase64Image();
+    link.click();
   });
 
   let simStep = 0;

@@ -1,190 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Acid-Base Simulation</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@4.0.1/dist/chartjs-plugin-annotation.umd.min.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
-    canvas { max-width: 100%; height: auto; }
-    .controls label, .controls input, .controls select { display: block; margin: 0.5rem 0; }
-    .button-group button { margin: 0.5rem 0.5rem 0.5rem 0; }
-    #indicatorBox { padding: 0.5rem; border-radius: 5px; width: 150px; margin-top: 1rem; text-align: center; }
-  </style>
 </head>
 <body>
   <h1>Acid-Base Titration Simulation</h1>
 
-  <div class="controls">
-    <label>
-      Substance:
+  <section class="controls">
+    <label for="substance">Select Substance:
       <select id="substance">
         <option value="HCl">HCl (Strong Acid)</option>
         <option value="NaOH">NaOH (Strong Base)</option>
-        <option value="CH3COOH">CH3COOH (Weak Acid)</option>
+        <option value="CH3COOH">CH₃COOH (Weak Acid)</option>
       </select>
     </label>
-    <label>Concentration (M): <input type="number" id="concentration" value="0.1" step="0.01"></label>
-    <label>Volume of Acid (L): <input type="number" id="volumeInput" value="0.05" step="0.01"></label>
-    <label>Base Concentration (M): <input type="number" id="baseInput" value="0.1" step="0.01"></label>
-    <label>Titration Volume (mL): <input type="range" id="titrationSlider" min="0" max="60" value="0"></label>
-    <span id="sliderLabel">0 mL</span>
+
+    <label for="concentration">Concentration (M):
+      <input type="range" id="concentration" min="0.01" max="1.0" step="0.01" value="0.1">
+      <span id="concVal">0.10</span>
+    </label>
+
+    <label for="volumeInput">Acid Volume (L):
+      <input id="volumeInput" type="number" step="0.01" value="0.05">
+    </label>
+
+    <label for="baseInput">Base Concentration (M):
+      <input id="baseInput" type="number" step="0.01" value="0.1">
+    </label>
 
     <div class="button-group">
       <button id="resetButton">Reset</button>
-      <button id="simulateButton">Step-by-Step</button>
+      <button id="exportButton">Export Chart</button>
+      <button id="simulateButton">Step-by-Step Simulation</button>
       <button id="playPauseButton">Play</button>
     </div>
-  </div>
+  </section>
 
-  <div id="indicatorBox">pH: 7.00</div>
-  <canvas id="titrationChart" width="600" height="400"></canvas>
+  <section class="output">
+    <div id="indicatorBox">pH Indicator</div>
+    <p>Current pH: <span id="pH">7.00</span></p>
+    <p id="livePHDisplay">pH: 0.00</p>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      window.Chart.register(window.ChartAnnotation);
+    <label for="titrationSlider">Titration Progress:
+      <input id="titrationSlider" type="range" min="0" max="60" value="0">
+      <span id="sliderLabel">0 mL</span>
+    </label>
 
-      const ctx = document.getElementById("titrationChart").getContext("2d");
-      const slider = document.getElementById("titrationSlider");
-      const label = document.getElementById("sliderLabel");
-      const indicatorBox = document.getElementById("indicatorBox");
+    <canvas id="titrationChart" width="600" height="400"></canvas>
+  </section>
 
-      let chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: Array.from({length: 61}, (_, i) => i),
-          datasets: [{
-            label: "pH vs Volume",
-            borderColor: "blue",
-            fill: false,
-            data: Array(61).fill(null)
-          }]
-        },
-        options: {
-          scales: {
-            x: { title: { display: true, text: "Volume (mL)" } },
-            y: { title: { display: true, text: "pH" }, min: 0, max: 14 }
-          },
-          plugins: {
-            annotation: {
-              annotations: {
-                stepLine: {
-                  type: 'line',
-                  xMin: 0,
-                  xMax: 0,
-                  borderColor: 'red',
-                  borderWidth: 2,
-                }
-              }
-            }
-          }
-        }
-      });
-
-      function calculateData() {
-        const acidType = document.getElementById("substance").value;
-        const conc = parseFloat(document.getElementById("concentration").value);
-        const vol = parseFloat(document.getElementById("volumeInput").value);
-        const baseConc = parseFloat(document.getElementById("baseInput").value);
-        const Ka = 1.8e-5;
-
-        return Array.from({length: 61}, (_, mL) => {
-          const Vb = mL / 1000;
-          let pH = 7;
-
-          if (acidType === "HCl") {
-            const nA = conc * vol;
-            const nB = baseConc * Vb;
-            if (nB < nA) pH = -Math.log10((nA - nB) / (vol + Vb));
-            else if (Math.abs(nB - nA) < 1e-6) pH = 7;
-            else pH = 14 + Math.log10((nB - nA) / (vol + Vb));
-          } else if (acidType === "NaOH") {
-            const nB = conc * vol;
-            const nA = baseConc * Vb;
-            if (nA < nB) pH = 14 + Math.log10((nB - nA) / (vol + Vb));
-            else if (Math.abs(nA - nB) < 1e-6) pH = 7;
-            else pH = -Math.log10((nA - nB) / (vol + Vb));
-          } else if (acidType === "CH3COOH") {
-            const nHA = conc * vol;
-            const nB = baseConc * Vb;
-            if (nB < nHA) {
-              const ratio = nB / (nHA - nB);
-              pH = -Math.log10(Ka) + Math.log10(ratio);
-            } else if (Math.abs(nB - nHA) < 1e-6) {
-              pH = 7; // At equivalence
-            } else {
-              const excessOH = (nB - nHA) / (vol + Vb);
-              pH = 14 + Math.log10(excessOH);
-            }
-          }
-          return Math.min(14, Math.max(0, pH));
-        });
-      }
-
-      function updateChart() {
-        const data = calculateData();
-        chart.data.datasets[0].data = data;
-        const step = parseInt(slider.value);
-        chart.options.plugins.annotation.annotations.stepLine.xMin = step;
-        chart.options.plugins.annotation.annotations.stepLine.xMax = step;
-        chart.update();
-        label.textContent = `${step} mL`;
-        indicatorBox.textContent = `pH: ${data[step].toFixed(2)}`;
-        indicatorBox.style.backgroundColor = data[step] < 7 ? '#f88' : data[step] > 7 ? '#8f8' : '#8cf';
-      }
-
-      slider.addEventListener("input", updateChart);
-      document.getElementById("substance").addEventListener("change", updateChart);
-      document.getElementById("concentration").addEventListener("input", updateChart);
-      document.getElementById("volumeInput").addEventListener("input", updateChart);
-      document.getElementById("baseInput").addEventListener("input", updateChart);
-
-      document.getElementById("resetButton").addEventListener("click", () => {
-        slider.value = 0;
-        updateChart();
-      });
-
-      let simStep = 0;
-      let timer = null;
-
-      document.getElementById("simulateButton").addEventListener("click", () => {
-        if (simStep <= 60) {
-          slider.value = simStep;
-          updateChart();
-          simStep++;
-        } else {
-          simStep = 0;
-        }
-      });
-
-      document.getElementById("playPauseButton").addEventListener("click", () => {
-        if (timer) {
-          clearInterval(timer);
-          timer = null;
-          playPauseButton.textContent = "Play";
-        } else {
-          timer = setInterval(() => {
-            if (simStep <= 60) {
-              slider.value = simStep;
-              updateChart();
-              simStep++;
-            } else {
-              clearInterval(timer);
-              timer = null;
-              playPauseButton.textContent = "Play";
-            }
-          }, 300);
-          playPauseButton.textContent = "Pause";
-        }
-      });
-
-      updateChart();
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
+
 
 

@@ -1,5 +1,92 @@
-body { font-family: Arial, sans-serif; margin: 2rem; }
-canvas { max-width: 100%; height: auto; }
-.controls label, .controls input, .controls select { display: block; margin: 0.5rem 0; }
-.button-group button { margin: 0.5rem 0.5rem 0.5rem 0; }
-#indicatorBox { padding: 0.5rem; border-radius: 5px; width: 150px; margin-top: 1rem; text-align: center; }
+body {
+  font-family: Arial, sans-serif;
+  margin: 2rem;
+  background-color: #f0f4f7;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  color: #1a3c6e;
+}
+
+.controls {
+  max-width: 600px;
+  margin: 1rem auto;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.controls label {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.controls input,
+.controls select {
+  width: 100%;
+  padding: 0.4rem;
+  margin-top: 0.2rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.button-group button {
+  flex: 1;
+  padding: 0.6rem;
+  background-color: #1a3c6e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button-group button:hover {
+  background-color: #274b85;
+}
+
+.output {
+  max-width: 700px;
+  margin: 2rem auto;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+#indicatorBox {
+  margin: 1rem auto;
+  padding: 0.5rem;
+  width: 150px;
+  border-radius: 5px;
+  font-weight: bold;
+  color: #222;
+  background-color: #8cf;
+}
+
+canvas {
+  max-width: 100%;
+  height: auto;
+  margin-top: 1rem;
+}
+
+#titrationSlider {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+#sliderLabel {
+  display: block;
+  margin-top: 0.5rem;
+  font-weight: bold;
+}
