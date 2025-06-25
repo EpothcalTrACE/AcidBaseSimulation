@@ -4,11 +4,16 @@ const concVal = document.getElementById("concVal");
 const volumeInput = document.getElementById("volumeInput");
 const baseInput = document.getElementById("baseInput");
 const simulateBtn = document.getElementById("simulate");
+const liveBtn = document.getElementById("liveTitration");
 const pHDisplay = document.getElementById("pH");
 
 let chart;
+let liveIndex = 0;
+let interval = null;
+let full_pH_values = [], full_baseVols = [];
 
 simulateBtn.addEventListener("click", () => {
+  stopLive();
   const substance = substanceSelect.value;
   const conc = parseFloat(concentrationInput.value);
   const vol = parseFloat(volumeInput.value);
@@ -17,11 +22,23 @@ simulateBtn.addEventListener("click", () => {
   drawTitrationChart(substance, conc, vol, baseConc);
 });
 
-function drawTitrationChart(substance, acidConc, acidVol, baseConc) {
+liveBtn.addEventListener("click", () => {
+  stopLive();
+  const substance = substanceSelect.value;
+  const conc = parseFloat(concentrationInput.value);
+  const vol = parseFloat(volumeInput.value);
+  const baseConc = parseFloat(baseInput.value);
+  concVal.textContent = conc.toFixed(2);
+  generateTitrationData(substance, conc, vol, baseConc);
+  runLiveTitration();
+});
+
+function generateTitrationData(substance, acidConc, acidVol, baseConc) {
   const pKa = 4.74;
   const Ka = Math.pow(10, -pKa);
-  let pH_values = [], baseVols = [];
   const nAcid = acidConc * acidVol;
+  full_pH_values = [];
+  full_baseVols = [];
 
   for (let i = 0; i <= 60; i++) {
     const v_base = i / 1000;
@@ -50,22 +67,67 @@ function drawTitrationChart(substance, acidConc, acidVol, baseConc) {
     }
 
     pH = Math.max(0, Math.min(14, pH));
-    baseVols.push(i);
-    pH_values.push(pH);
+    full_baseVols.push(i);
+    full_pH_values.push(pH);
   }
+}
 
-  pHDisplay.textContent = pH_values[pH_values.length - 1].toFixed(2);
+function runLiveTitration() {
+  const ctx = document.getElementById("titrationChart").getContext("2d");
+  if (chart) chart.destroy();
+  liveIndex = 0;
 
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [],
+      datasets: [{
+        label: 'Live Titration Curve',
+        data: [],
+        borderColor: 'green',
+        backgroundColor: 'rgba(0, 255, 0, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      scales: {
+        x: { title: { display: true, text: 'Volume of Base Added (mL)' } },
+        y: { min: 0, max: 14, title: { display: true, text: 'pH' } }
+      }
+    }
+  });
+
+  interval = setInterval(() => {
+    if (liveIndex >= full_baseVols.length) {
+      clearInterval(interval);
+      return;
+    }
+    const v = full_baseVols[liveIndex];
+    const pH = full_pH_values[liveIndex];
+    chart.data.labels.push(v);
+    chart.data.datasets[0].data.push(pH);
+    chart.update();
+    pHDisplay.textContent = pH.toFixed(2);
+    liveIndex++;
+  }, 200);
+}
+
+function drawTitrationChart(substance, acidConc, acidVol, baseConc) {
+  generateTitrationData(substance, acidConc, acidVol, baseConc);
   const ctx = document.getElementById("titrationChart").getContext("2d");
   if (chart) chart.destroy();
 
   chart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: baseVols,
+      labels: full_baseVols,
       datasets: [{
-        label: 'Titration Curve',
-        data: pH_values,
+        label: 'Full Titration Curve',
+        data: full_pH_values,
         borderColor: 'blue',
         backgroundColor: 'rgba(0, 0, 255, 0.1)',
         fill: true,
@@ -81,6 +143,15 @@ function drawTitrationChart(substance, acidConc, acidVol, baseConc) {
       }
     }
   });
+
+  pHDisplay.textContent = full_pH_values[full_pH_values.length - 1].toFixed(2);
+}
+
+function stopLive() {
+  if (interval) {
+    clearInterval(interval);
+    interval = null;
+  }
 }
 
 
