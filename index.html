@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Acid-Base Simulation</title>
   <link rel="stylesheet" href="styles.css" />
+  
+  <!-- Load Chart.js and the Annotation plugin -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.1.1"></script>
 </head>
 <body>
   <h1>Interactive Acid-Base Simulation</h1>
@@ -32,7 +35,6 @@
       <input id="baseInput" type="number" step="0.01" value="0.1">
     </label>
 
-    <!-- ✅ Functional Tabs / Buttons -->
     <div class="button-group">
       <button id="resetButton">Reset</button>
       <button id="exportButton">Export Chart</button>
@@ -52,6 +54,7 @@
     <canvas id="titrationChart" width="600" height="400"></canvas>
   </section>
 
+  <!-- Link to external behavior -->
   <script src="script.js"></script>
 </body>
 </html>
