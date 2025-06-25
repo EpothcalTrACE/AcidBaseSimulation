@@ -2,17 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Acid-Base Simulation</title>
-
-  <!-- Link to external CSS and Chart.js -->
   <link rel="stylesheet" href="styles.css" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
   <h1>Interactive Acid-Base Simulation</h1>
 
   <section class="controls">
@@ -37,6 +32,14 @@
       <input id="baseInput" type="number" step="0.01" value="0.1">
     </label>
 
+    <!-- ✅ Functional Tabs / Buttons -->
+    <div class="button-group">
+      <button id="resetButton">Reset</button>
+      <button id="exportButton">Export Chart</button>
+      <button id="simulateButton">Step-by-Step Simulation</button>
+      <button id="playPauseButton">Play</button>
+    </div>
+
     <label for="titrationSlider">Titration Progress:
       <input id="titrationSlider" type="range" min="0" max="60" value="60">
       <span id="sliderLabel">60 mL</span>
@@ -49,18 +52,7 @@
     <canvas id="titrationChart" width="600" height="400"></canvas>
   </section>
 
-  <!-- JavaScript at the bottom so all DOM is loaded first -->
   <script src="script.js"></script>
-
-  <!-- Optional: Register Service Worker for PWA support -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('Service Worker Registered'))
-        .catch(err => console.error('SW registration failed:', err));
-    }
-  </script>
-
 </body>
 </html>
 

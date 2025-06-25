@@ -2,56 +2,50 @@
 body {
   font-family: Arial, sans-serif;
   margin: 20px;
-  background: #f2f2f2;
-  color: #333;
+  background-color: #f4f4f4;
 }
-
 h1 {
   text-align: center;
-  margin-bottom: 20px;
 }
-
 .controls, .output {
-  background: white;
-  padding: 20px;
+  background-color: #fff;
   border-radius: 10px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 20px;
+  margin: 20px auto;
+  max-width: 800px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
-
 label {
   display: block;
   margin: 10px 0;
 }
-
+input, select {
+  width: 100%;
+  padding: 5px;
+}
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
 .button-group button {
-  margin-right: 10px;
-  padding: 10px 15px;
+  padding: 8px 14px;
+  font-size: 14px;
   border: none;
-  background: #007bff;
+  background-color: #007bff;
   color: white;
-  cursor: pointer;
   border-radius: 5px;
+  cursor: pointer;
 }
-
 .button-group button:hover {
-  background: #0056b3;
+  background-color: #0056b3;
 }
-
 #indicatorBox {
   padding: 10px;
-  margin-bottom: 10px;
+  text-align: center;
   font-weight: bold;
-  border-radius: 5px;
   color: #fff;
-}
-
-#titrationSlider {
-  width: 100%;
-  margin: 10px 0;
-}
-
-canvas {
-  max-width: 100%;
-  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-bottom: 10px;
 }
