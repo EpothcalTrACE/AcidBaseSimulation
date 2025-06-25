@@ -9,6 +9,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const pHDisplay = document.getElementById("pH");
   const indicatorBox = document.getElementById("indicatorBox");
 
+  const resetButton = document.getElementById("resetButton");
+  const exportButton = document.getElementById("exportButton");
+  const simulateButton = document.getElementById("simulateButton");
+  const playPauseButton = document.getElementById("playPauseButton");
+
   const ctx = document.getElementById("titrationChart").getContext("2d");
   const chart = new Chart(ctx, {
     type: "line",
@@ -17,25 +22,21 @@ document.addEventListener("DOMContentLoaded", () => {
       datasets: [{
         label: "Titration Curve",
         borderColor: "blue",
+        backgroundColor: "lightblue",
         data: [],
         fill: false
       }]
     },
     options: {
+      animation: false,
       scales: {
         x: {
-          title: {
-            display: true,
-            text: "Volume Added (mL)"
-          }
+          title: { display: true, text: "Volume Added (mL)" }
         },
         y: {
           min: 0,
           max: 14,
-          title: {
-            display: true,
-            text: "pH"
-          }
+          title: { display: true, text: "pH" }
         }
       }
     }
@@ -53,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const conc = parseFloat(concentrationInput.value);
     const acidVol = parseFloat(volumeInput.value);
     const baseConc = parseFloat(baseInput.value);
-    const Ka = 1.8e-5; // For CH3COOH
+    const Ka = 1.8e-5;
 
     const labels = [];
     const data = [];
@@ -78,9 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const OH = (n_base - n_acid) / (acidVol + v_base);
           pH = 14 + Math.log10(OH);
         }
-      }
-
-      else if (substance === "HCl") {
+      } else if (substance === "HCl") {
         const n_acid = conc * acidVol;
         if (n_base < n_acid) {
           const H = (n_acid - n_base) / (acidVol + v_base);
@@ -91,9 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const OH = (n_base - n_acid) / (acidVol + v_base);
           pH = 14 + Math.log10(OH);
         }
-      }
-
-      else if (substance === "NaOH") {
+      } else if (substance === "NaOH") {
         const n_base_initial = baseConc * acidVol;
         const n_acid_added = conc * v_base;
 
@@ -109,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       labels.push(mL);
-      data.push(Math.max(0, Math.min(14, pH))); // Clamp between 0 and 14
+      data.push(Math.max(0, Math.min(14, pH))); // Clamp between 0–14
     }
 
     chart.data.labels = labels;
@@ -120,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePHDisplay(currentPH);
   }
 
-  // Event Listeners
+  // Input Event Listeners
   concentrationInput.addEventListener("input", () => {
     concVal.textContent = parseFloat(concentrationInput.value).toFixed(2);
     generateCurve();
@@ -137,7 +134,58 @@ document.addEventListener("DOMContentLoaded", () => {
     updatePHDisplay(pH);
   });
 
-  generateCurve(); // Initial run
+  // --- Buttons ---
+  let simulationStep = 0;
+  let isPlaying = false;
+  let playInterval = null;
+
+  resetButton.addEventListener("click", () => {
+    titrationSlider.value = 0;
+    sliderLabel.textContent = "0 mL";
+    simulationStep = 0;
+    isPlaying = false;
+    playPauseButton.textContent = "Play";
+    generateCurve();
+  });
+
+  exportButton.addEventListener("click", () => {
+    const link = document.createElement("a");
+    link.href = chart.toBase64Image();
+    link.download = "titration-curve.png";
+    link.click();
+  });
+
+  simulateButton.addEventListener("click", () => {
+    if (simulationStep <= titrationSlider.max) {
+      titrationSlider.value = simulationStep;
+      sliderLabel.textContent = `${simulationStep} mL`;
+      const pH = chart.data.datasets[0].data[simulationStep] || 7;
+      updatePHDisplay(pH);
+      simulationStep++;
+    } else {
+      simulationStep = 0;
+    }
+  });
+
+  playPauseButton.addEventListener("click", () => {
+    isPlaying = !isPlaying;
+    playPauseButton.textContent = isPlaying ? "Pause" : "Play";
+
+    if (isPlaying) {
+      playInterval = setInterval(() => {
+        simulateButton.click();
+        if (simulationStep > titrationSlider.max) {
+          clearInterval(playInterval);
+          isPlaying = false;
+          playPauseButton.textContent = "Play";
+        }
+      }, 500);
+    } else {
+      clearInterval(playInterval);
+    }
+  });
+
+  generateCurve(); // Initial load
 });
 
 
