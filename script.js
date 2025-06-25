@@ -79,28 +79,28 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (substance === "HCl") {
         const n_acid = conc * acidVol;
         if (n_base < n_acid) {
-          const H_conc = (n_acid - n_base) / (acidVol + v_base);
-          pH = -Math.log10(H_conc);
+        const H_conc = (n_acid - n_base) / (acidVol + v_base);
+        pH = -Math.log10(H_conc);
         } else if (Math.abs(n_base - n_acid) < 1e-6) {
-          pH = 7;
+        pH = 7;
         } else {
-          const OH_conc = (n_base - n_acid) / (acidVol + v_base);
-          pH = 14 + Math.log10(OH_conc);
-        }
+        const OH_conc = (n_base - n_acid) / (acidVol + v_base);
+        pH = 14 + Math.log10(OH_conc);
+      }
 
       } else if (substance === "NaOH") {
         const n_base_total = baseConc * acidVol;
         const n_acid_added = conc * v_base;
 
         if (n_acid_added < n_base_total) {
-          const OH_conc = (n_base_total - n_acid_added) / (acidVol + v_base);
-          pH = 14 + Math.log10(OH_conc);
-        } else if (Math.abs(n_acid_added - n_base_total) < 1e-6) {
-          pH = 7;
-        } else {
-          const H_conc = (n_acid_added - n_base_total) / (acidVol + v_base);
-          pH = -Math.log10(H_conc);
-        }
+        const OH_conc = (n_base_total - n_acid_added) / (acidVol + v_base);
+      pH = 14 + Math.log10(OH_conc);
+      } else if (Math.abs(n_acid_added - n_base_total) < 1e-6) {
+      pH = 7;
+      } else {
+      const H_conc = (n_acid_added - n_base_total) / (acidVol + v_base);
+      pH = -Math.log10(H_conc);
+    }
       }
 
       labels.push(mL);
