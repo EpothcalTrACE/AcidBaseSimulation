@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // ✅ Correct registration syntax for UMD build
+  window.Chart.register(window.ChartAnnotation);
+  const ctx = document.getElementById("titrationChart").getContext("2d");
   const substanceSelect = document.getElementById("substance");
   const concentrationInput = document.getElementById("concentration");
   const concVal = document.getElementById("concVal");
