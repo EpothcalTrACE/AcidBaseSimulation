@@ -1,160 +1,87 @@
-document.addEventListener("DOMContentLoaded", () => {
-  window.Chart.register(window.ChartAnnotation);
+const substanceSelect = document.getElementById("substance");
+const concentrationInput = document.getElementById("concentration");
+const concVal = document.getElementById("concVal");
+const volumeInput = document.getElementById("volumeInput");
+const baseInput = document.getElementById("baseInput");
+const simulateBtn = document.getElementById("simulate");
+const pHDisplay = document.getElementById("pH");
+
+let chart;
+
+simulateBtn.addEventListener("click", () => {
+  const substance = substanceSelect.value;
+  const conc = parseFloat(concentrationInput.value);
+  const vol = parseFloat(volumeInput.value);
+  const baseConc = parseFloat(baseInput.value);
+  concVal.textContent = conc.toFixed(2);
+  drawTitrationChart(substance, conc, vol, baseConc);
+});
+
+function drawTitrationChart(substance, acidConc, acidVol, baseConc) {
+  const pKa = 4.74;
+  const Ka = Math.pow(10, -pKa);
+  let pH_values = [], baseVols = [];
+  const nAcid = acidConc * acidVol;
+
+  for (let i = 0; i <= 60; i++) {
+    const v_base = i / 1000;
+    const n_base = baseConc * v_base;
+    let pH = 7;
+
+    if (substance === "CH3COOH") {
+      if (n_base < nAcid) {
+        const n_HA = nAcid - n_base;
+        const n_A = n_base;
+        pH = pKa + Math.log10(n_A / n_HA);
+      } else if (n_base === nAcid) {
+        pH = pKa;
+      } else {
+        const excessOH = (n_base - nAcid) / (acidVol + v_base);
+        pH = 14 + Math.log10(excessOH);
+      }
+    } else if (substance === "HCl") {
+      const totalVol = acidVol + v_base;
+      const Hplus = Math.max(1e-7, (acidConc * acidVol - n_base) / totalVol);
+      pH = -Math.log10(Hplus);
+    } else if (substance === "NaOH") {
+      const totalVol = acidVol + v_base;
+      const OH = Math.max(1e-7, (n_base - acidConc * acidVol) / totalVol);
+      pH = 14 + Math.log10(OH);
+    }
+
+    pH = Math.max(0, Math.min(14, pH));
+    baseVols.push(i);
+    pH_values.push(pH);
+  }
+
+  pHDisplay.textContent = pH_values[pH_values.length - 1].toFixed(2);
 
   const ctx = document.getElementById("titrationChart").getContext("2d");
-  const slider = document.getElementById("titrationSlider");
-  const label = document.getElementById("sliderLabel");
-  const indicatorBox = document.getElementById("indicatorBox");
-  const pHSpan = document.getElementById("pH");
-  const livePHDisplay = document.getElementById("livePHDisplay");
-  const concVal = document.getElementById("concVal");
+  if (chart) chart.destroy();
 
-  const chart = new Chart(ctx, {
+  chart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: Array.from({ length: 61 }, (_, i) => i),
+      labels: baseVols,
       datasets: [{
-        label: "pH vs Volume (mL)",
-        borderColor: "blue",
-        data: Array(61).fill(null),
-        tension: 0.3,
-        fill: false
+        label: 'Titration Curve',
+        data: pH_values,
+        borderColor: 'blue',
+        backgroundColor: 'rgba(0, 0, 255, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
       scales: {
-        x: { title: { display: true, text: "Volume (mL)" } },
-        y: { min: 0, max: 14, title: { display: true, text: "pH" } }
-      },
-      plugins: {
-        annotation: {
-          annotations: {
-            stepLine: {
-              type: 'line',
-              xMin: 0,
-              xMax: 0,
-              borderColor: 'red',
-              borderWidth: 2
-            }
-          }
-        }
+        x: { title: { display: true, text: 'Volume of Base Added (mL)' } },
+        y: { min: 0, max: 14, title: { display: true, text: 'pH' } }
       }
     }
   });
-
-  function calculateData() {
-    const acidType = document.getElementById("substance").value;
-    const conc = parseFloat(document.getElementById("concentration").value);
-    const vol = parseFloat(document.getElementById("volumeInput").value);
-    const baseConc = parseFloat(document.getElementById("baseInput").value);
-    const Ka = 1.8e-5;
-
-    return Array.from({ length: 61 }, (_, mL) => {
-      const Vb = mL / 1000;
-      let pH = 7;
-
-      if (acidType === "HCl") {
-        const nA = conc * vol;
-        const nB = baseConc * Vb;
-        if (nB < nA) pH = -Math.log10((nA - nB) / (vol + Vb));
-        else if (Math.abs(nB - nA) < 1e-6) pH = 7;
-        else pH = 14 + Math.log10((nB - nA) / (vol + Vb));
-      } else if (acidType === "NaOH") {
-        const nB = conc * vol;
-        const nA = baseConc * Vb;
-        if (nA < nB) pH = 14 + Math.log10((nB - nA) / (vol + Vb));
-        else if (Math.abs(nA - nB) < 1e-6) pH = 7;
-        else pH = -Math.log10((nA - nB) / (vol + Vb));
-      } else if (acidType === "CH3COOH") {
-        const nHA = conc * vol;
-        const nB = baseConc * Vb;
-        if (nB < nHA) {
-          const ratio = nB / (nHA - nB);
-          pH = -Math.log10(Ka) + Math.log10(ratio);
-        } else if (Math.abs(nB - nHA) < 1e-6) {
-          pH = 7;
-        } else {
-          const excessOH = (nB - nHA) / (vol + Vb);
-          pH = 14 + Math.log10(excessOH);
-        }
-      }
-      return Math.min(14, Math.max(0, pH));
-    });
-  }
-
-  function updateChart() {
-    const data = calculateData();
-    chart.data.datasets[0].data = data;
-    const step = parseInt(slider.value);
-    chart.options.plugins.annotation.annotations.stepLine.xMin = step;
-    chart.options.plugins.annotation.annotations.stepLine.xMax = step;
-    chart.update();
-    label.textContent = `${step} mL`;
-    pHSpan.textContent = data[step].toFixed(2);
-    livePHDisplay.textContent = `pH: ${data[step].toFixed(2)}`;
-    indicatorBox.style.backgroundColor = data[step] < 7 ? '#f88' : data[step] > 7 ? '#8f8' : '#8cf';
-  }
-
-  slider.addEventListener("input", updateChart);
-  document.getElementById("substance").addEventListener("change", updateChart);
-  document.getElementById("concentration").addEventListener("input", () => {
-    concVal.textContent = parseFloat(document.getElementById("concentration").value).toFixed(2);
-    updateChart();
-  });
-  document.getElementById("volumeInput").addEventListener("input", updateChart);
-  document.getElementById("baseInput").addEventListener("input", updateChart);
-
-  document.getElementById("resetButton").addEventListener("click", () => {
-    slider.value = 0;
-    updateChart();
-  });
-
-  document.getElementById("exportButton").addEventListener("click", () => {
-    const link = document.createElement("a");
-    link.download = "titration_chart.png";
-    link.href = chart.toBase64Image();
-    link.click();
-  });
-
-  let simStep = 0;
-  let timer = null;
-
-  document.getElementById("simulateButton").addEventListener("click", () => {
-    if (simStep <= 60) {
-      slider.value = simStep;
-      updateChart();
-      simStep++;
-    } else {
-      simStep = 0;
-    }
-  });
-
-  document.getElementById("playPauseButton").addEventListener("click", () => {
-    const btn = document.getElementById("playPauseButton");
-    if (timer) {
-      clearInterval(timer);
-      timer = null;
-      btn.textContent = "Play";
-    } else {
-      timer = setInterval(() => {
-        if (simStep <= 60) {
-          slider.value = simStep;
-          updateChart();
-          simStep++;
-        } else {
-          clearInterval(timer);
-          timer = null;
-          btn.textContent = "Play";
-        }
-      }, 300);
-      btn.textContent = "Pause";
-    }
-  });
-
-  updateChart();
-});
+}
 
 
 
